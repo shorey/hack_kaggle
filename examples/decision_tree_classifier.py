@@ -15,8 +15,9 @@ def main():
     y = data.target
     import pdb
     #pdb.set_trace()
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
-    clf = ClassificationTree(min_samples_split=20,min_impurity=0.5)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.4)
+    #clf = ClassificationTree(min_samples_split=5,min_impurity=0.05,max_depth=5,criterion="entropy")
+    clf = ClassificationTree(min_impurity=0.05,criterion="gini")
     clf.fit(X_train,y_train)
     y_pred = clf.predict(X_test)
     accuracy = accuracy_score(y_test, y_pred)

@@ -17,7 +17,7 @@ class DecisionNode():
 #super class of regression and classification tree
 class DecisionTree(object):
     def __init__(self,min_samples_split=2,min_impurity=1e-7,
-                 max_depth=float("inf"),loss=None):
+                 max_depth=float("inf"),loss=None,criterion="entropy"):
         self.root = None
         self.min_samples_split = min_samples_split
         self.min_impurity = min_impurity
@@ -26,6 +26,7 @@ class DecisionTree(object):
         self._leaf_value_calculation = None
         self.one_dim = None
         self.loss = loss
+        self.criterion = criterion
 
     def fit(self, X, y, loss = None):
         """build decision tree"""
@@ -35,6 +36,7 @@ class DecisionTree(object):
 
     def _build_tree(self, X, y, current_depth=0):
         largest_impurity = 0
+        min_gini = 999
         best_criteria = None
         best_sets = None
 
@@ -67,8 +69,17 @@ class DecisionTree(object):
 
                         #calculate impurity
                         impurity = self._impurity_calculation(y,y1,y2)
-                        if impurity > largest_impurity:
-                            largest_impurity = impurity
+                        flag = False
+                        if self.criterion == "entropy":
+                            if impurity > largest_impurity:
+                                flag = True
+                                largest_impurity = impurity
+                        elif self.criterion == "gini":
+                            if impurity < min_gini:
+                                flag = True
+                                min_gini = impurity
+
+                        if flag:
                             best_criteria = {"feature_i":feature_i,
                                              "threshold":threshold}
                             best_sets = {
@@ -77,16 +88,22 @@ class DecisionTree(object):
                                 "rightX":Xy2[:, :n_features],
                                 "righty":Xy2[:, n_features:]
                             }
-                if largest_impurity > self.min_impurity:
-                    #build subtrees for the right and left branches
-                    true_branch = self._build_tree(best_sets["leftX"],best_sets["lefty"],current_depth+1)
-                    false_branch = self._build_tree(best_sets["rightX"],best_sets["righty"],current_depth+1)
-                    return DecisionNode(feature_i=best_criteria["feature_i"],threshold=best_criteria["threshold"],
-                                        true_branch=true_branch, false_branch=false_branch)
-                #we are at leaf =>determine value
-                leaf_value = self._leaf_value_calculation(y)
 
-                return DecisionNode(value=leaf_value)
+        if self.criterion == "gini":
+            comp_criterion = min_gini
+        else:
+            comp_criterion = largest_impurity
+
+        if comp_criterion > self.min_impurity and best_criteria is not None:
+            #build subtrees for the right and left branches
+            true_branch = self._build_tree(best_sets["leftX"],best_sets["lefty"],current_depth+1)
+            false_branch = self._build_tree(best_sets["rightX"],best_sets["righty"],current_depth+1)
+            return DecisionNode(feature_i=best_criteria["feature_i"],threshold=best_criteria["threshold"],
+                                        true_branch=true_branch, false_branch=false_branch)
+        #we are at leaf =>determine value
+        leaf_value = self._leaf_value_calculation(y)
+
+        return DecisionNode(value=leaf_value)
 
     def predict_value(self, x, tree=None):
         if tree is None:
@@ -209,6 +226,21 @@ class ClassificationTree(DecisionTree):
         info_gain = entropy - p*calculate_entropy(y1)-(1-p)*calculate_entropy(y2)
         return info_gain
 
+    def _calculate_gini_index(self, y,y1, y2):
+        #calculate gini index
+        size1 = len(y1)
+        size2 = len(y2)
+        gini1 = 0
+        gini2 = 0
+        classes = np.unique(y)
+        for c in classes:
+            if size1 != 0:
+                gini1 += ([tmp for tmp in y1].count(c)/size1)**2
+            if size2 != 0:
+                gini2 += ([tmp for tmp in y2].count(c)/size2)**2
+        gini = (1-gini1)*size1/(size1+size2)+(1-gini2)*size2/(size1+size2)
+        return gini
+
     def _majority_vote(self,y):
         most_common = None
         max_count = 0
@@ -221,7 +253,8 @@ class ClassificationTree(DecisionTree):
         return most_common
 
     def fit(self,X,y):
-        self._impurity_calculation = self._calculate_information_gain
+        #self._impurity_calculation = self._calculate_information_gain
+        self._impurity_calculation = self._calculate_gini_index
         self._leaf_value_calculation = self._majority_vote
         super().fit(X, y)
 
