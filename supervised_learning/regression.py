@@ -59,7 +59,7 @@ class Regression():
     def __init__(self, n_iterations, learning_rate):
         self.n_iterations = n_iterations
         self.learning_rate = learning_rate
-        self.regularization = None
+        #self.regularization = None
 
 
     def initialize_weights(self, n_features):
@@ -72,7 +72,7 @@ class Regression():
         self.w = np.random.uniform(-limit, limit, (n_features,))
 
 
-    def fit(self,):
+    def fit(self,X,y):
         # insert constant ones for bias weights
         X = np.insert(X, 0, 1, axis=1)
         self.training_errors = []
