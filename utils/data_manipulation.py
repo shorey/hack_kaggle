@@ -123,7 +123,7 @@ def k_fold_cross_validation_sets(X, y, k, shuffle=True):
     for i in range(k):
         X_test, y_test = X_split[i], y_split[i]
         X_train = np.concatenate(X_split[:i]+X_split[i+1:],axis=0)
-        y_train = np.concatenate(y_split[:i]+y_split[i+1:],axis=1)
+        y_train = np.concatenate(y_split[:i]+y_split[i+1:],axis=0)
         sets.append([X_train, X_test, y_train, y_test])
 
     # add left over samples to last set as training samples 

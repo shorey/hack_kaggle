@@ -18,7 +18,7 @@ def main():
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.4)
     poly_degree = 13
 
-    model = LassoRegression(degree=20,
+    model = LassoRegression(degree=poly_degree,
                             reg_factor=0.05,
                             learning_rate=0.001,
                             n_iterations=4000)
