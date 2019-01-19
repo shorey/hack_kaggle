@@ -17,7 +17,7 @@ def main():
     # One-hot encoding of nominal y-values
     y = to_categorical(y)
 
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, seed=2)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, seed=8)
 
     # Perceptron
     clf = Perceptron(n_iterations=5000,
